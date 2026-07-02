@@ -10,13 +10,16 @@ export interface TileViewProps {
   onClick?: () => void;
   highlightType?: 'chi' | 'peng' | 'gang' | 'source' | 'latest' | 'candidate';
   className?: string;
+  size?: 'normal' | 'compact' | 'mini';
 }
 
-export function TileView({ tile, hidden, selected, disabled, isLatestDiscard, onClick, highlightType, className }: TileViewProps) {
+export function TileView({ tile, hidden, selected, disabled, isLatestDiscard, onClick, highlightType, className, size = 'normal' }: TileViewProps) {
+  const sizeClass = size !== 'normal' ? `tile-${size}` : '';
+
   if (hidden || !tile) {
     return (
       <div 
-        className={`mahjong-tile tile-back ${disabled ? 'disabled' : ''} ${className || ''}`}
+        className={`mahjong-tile tile-back ${sizeClass} ${disabled ? 'disabled' : ''} ${className || ''}`}
         onClick={!disabled ? onClick : undefined}
       >
         <div className="tile-back-inner">🀫</div>
@@ -48,6 +51,7 @@ export function TileView({ tile, hidden, selected, disabled, isLatestDiscard, on
     disabled ? 'disabled' : '',
     isLatestDiscard ? 'is-latest-discard' : '',
     highlightType ? `highlight-${highlightType}` : '',
+    sizeClass,
     className
   ].filter(Boolean).join(' ');
 

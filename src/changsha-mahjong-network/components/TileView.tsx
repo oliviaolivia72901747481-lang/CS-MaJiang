@@ -12,6 +12,7 @@ export interface TileViewProps {
   highlightType?: 'chi' | 'peng' | 'gang' | 'source' | 'latest' | 'candidate' | 'hand-participant' | 'meld-new';
   className?: string;
   role?: string;
+  size?: 'normal' | 'compact' | 'mini';
 }
 
 export function TileView({ className = '', highlightType, role, ...rest }: TileViewProps) {

@@ -65,27 +65,27 @@ describe('Mobile Discard Visibility Tests', () => {
       }];
 
       const el = MobileCenterDiscardArea({ players, lastDiscardTile: discards[7] }) as any;
-      const row = el.props.children[0];
+      const grid = el.props.children;
+      const row = grid.props.children[0];
       const riverRow = row.props.children[1];
       
       const children = riverRow.props.children;
       expect(children).toHaveLength(2);
 
       const tiles = children[0];
-      expect(tiles).toHaveLength(6);
+      expect(tiles).toHaveLength(2);
 
       // Latest card (t8) should be first (index 0) due to latest-first reversing
       expect(tiles[0].props.children.props.tile.instanceId).toBe('t8');
       expect(tiles[0].props.className).toBe('discard-tile-latest');
 
-      // Oldest visible card in the main view should be t3 (index 5)
-      expect(tiles[5].props.children.props.tile.instanceId).toBe('t3');
+      // Oldest visible card in the compact main view should be t7 (index 1)
+      expect(tiles[1].props.children.props.tile.instanceId).toBe('t7');
 
-      // The second child (index 1) should be the +M history badge showing "+2 历史"
+      // The second child (index 1) should be the +M history badge showing "+6"
       const badge = children[1];
       expect(badge.props.children[0]).toBe('+');
-      expect(badge.props.children[1]).toBe(2);
-      expect(badge.props.children[2]).toBe(' 历史');
+      expect(badge.props.children[1]).toBe(6);
     });
   });
 

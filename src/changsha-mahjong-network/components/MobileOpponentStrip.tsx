@@ -26,17 +26,17 @@ export function MobileOpponentStrip({ player, isCurrent }: MobileOpponentStripPr
         gap: '4px',
         background: isCurrent ? 'rgba(241, 196, 15, 0.12)' : 'rgba(255, 255, 255, 0.03)',
         border: isCurrent ? '1.5px solid var(--gold-accent)' : '1px solid rgba(255, 255, 255, 0.08)',
-        padding: '6px 10px',
+        padding: '4px 8px',
         borderRadius: '6px',
         width: '100%',
         boxSizing: 'border-box'
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '0.8rem' }}>
-        <span style={{ fontWeight: 'bold', color: isCurrent ? 'var(--gold-accent)' : '#fff' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '0.72rem', gap: '6px', alignItems: 'center' }}>
+        <span style={{ fontWeight: 'bold', color: isCurrent ? 'var(--gold-accent)' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '42%' }}>
           {player.isAI ? '🤖' : '👤'} {player.playerName} ({player.seat}号)
         </span>
-        <span>手牌: <strong style={{ color: 'var(--gold-accent)' }}>{player.handCount}</strong> 张</span>
+        <span>手牌 <strong style={{ color: 'var(--gold-accent)' }}>{player.handCount}</strong></span>
         <span style={{ 
           color: player.connectionState === 'online' 
             ? '#2ecc71' 
@@ -45,10 +45,10 @@ export function MobileOpponentStrip({ player, isCurrent }: MobileOpponentStripPr
                 : (player.connectionState === 'left' ? '#e67e22' : '#e74c3c')), 
           fontWeight: 'bold' 
         }}>
-          {player.connectionState === 'online' 
-            ? '● 在线' 
-            : (player.connectionState === 'reconnecting' 
-                ? '○ 重连中...' 
+          {player.connectionState === 'online'
+            ? '● 在线'
+            : (player.connectionState === 'reconnecting'
+                ? '○ 重连中...'
                 : (player.connectionState === 'left' ? '已离开 (AI托管)' : '● 离线'))}
         </span>
       </div>

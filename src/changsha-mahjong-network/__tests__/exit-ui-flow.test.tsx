@@ -4,11 +4,20 @@ import { MobileOnlineGameLayout } from '../components/MobileOnlineGameLayout.jsx
 import { OnlineGamePage } from '../components/OnlineGamePage.jsx';
 import { RoomStatusPanel } from '../components/RoomStatusPanel.jsx';
 
+const mobileMoreState = vi.hoisted(() => ({
+  forceOpen: false,
+  callIndex: 0,
+}));
+
 // Mock react
 vi.mock('react', async (importOriginal) => {
   const original = await importOriginal<typeof import('react')>();
   const mockUseState = (init: any) => {
     const val = typeof init === 'function' ? (init as any)() : init;
+    mobileMoreState.callIndex += 1;
+    if (mobileMoreState.forceOpen && mobileMoreState.callIndex === 8) {
+      return [true, vi.fn()];
+    }
     return [val, vi.fn()];
   };
   return {
@@ -93,6 +102,8 @@ describe('Exit UI Flow Confirmation Tests', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    mobileMoreState.forceOpen = false;
+    mobileMoreState.callIndex = 0;
     global.confirm = vi.fn().mockReturnValue(true);
     global.window = {
       innerWidth: 1024,
@@ -155,6 +166,8 @@ describe('Exit UI Flow Confirmation Tests', () => {
 
   it('3. MobileOnlineGameLayout playing exit click shows AI trustee confirmation', () => {
     const leaveRoomSpy = vi.fn().mockResolvedValue(undefined);
+    mobileMoreState.forceOpen = true;
+    mobileMoreState.callIndex = 0;
     
     const layout = MobileOnlineGameLayout({
       view: mockView,
@@ -167,7 +180,7 @@ describe('Exit UI Flow Confirmation Tests', () => {
       leaveRoom: leaveRoomSpy
     }) as any;
 
-    const exitBtn = findButtonByText(layout, '🚪');
+    const exitBtn = findButtonByText(layout, '离开房间');
     expect(exitBtn).not.toBeNull();
 
     const onClick = exitBtn.props.onClick;
@@ -179,6 +192,8 @@ describe('Exit UI Flow Confirmation Tests', () => {
 
   it('4. MobileOnlineGameLayout settlement exit click shows settlement exit confirmation', () => {
     const leaveRoomSpy = vi.fn().mockResolvedValue(undefined);
+    mobileMoreState.forceOpen = true;
+    mobileMoreState.callIndex = 0;
     const settlementView = {
       ...mockView,
       phase: 'settlement'
@@ -195,7 +210,7 @@ describe('Exit UI Flow Confirmation Tests', () => {
       leaveRoom: leaveRoomSpy
     }) as any;
 
-    const exitBtn = findButtonByText(layout, '🚪');
+    const exitBtn = findButtonByText(layout, '离开房间');
     expect(exitBtn).not.toBeNull();
 
     const onClick = exitBtn.props.onClick;

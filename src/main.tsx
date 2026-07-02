@@ -4,7 +4,21 @@ import { MahjongGamePage } from './changsha-mahjong-ui/components/MahjongGamePag
 import { OnlineLobbyPage } from './changsha-mahjong-network/components/OnlineLobbyPage.jsx';
 import './changsha-mahjong-ui/styles/mahjong.css';
 
+export function shouldHideModeSwitch(
+  mode: 'local' | 'online',
+  roomUrl: boolean,
+  onlineGamePageActive: boolean
+) {
+  return mode === 'online' && (roomUrl || onlineGamePageActive);
+}
+
 export function MainApp() {
+  const isRoomUrl = () => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    return Boolean(params.get('roomId'));
+  };
+
   const getInitialMode = (): 'local' | 'online' => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -29,9 +43,14 @@ export function MainApp() {
   };
 
   const [mode, setMode] = useState<'local' | 'online'>(getInitialMode);
+  const [onlineGamePageActive, setOnlineGamePageActive] = useState(false);
+  const hideModeSwitch = shouldHideModeSwitch(mode, isRoomUrl(), onlineGamePageActive);
 
   const handleModeChange = (newMode: 'local' | 'online') => {
     setMode(newMode);
+    if (newMode === 'local') {
+      setOnlineGamePageActive(false);
+    }
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       if (newMode === 'local') {
@@ -47,6 +66,7 @@ export function MainApp() {
   return (
     <div>
       {/* Mode Switch Bar */}
+      {!hideModeSwitch && (
       <div style={{
         display: 'flex',
         justifyContent: 'center',
@@ -89,8 +109,11 @@ export function MainApp() {
           🌐 多人联机模式 (v0.8)
         </button>
       </div>
+      )}
 
-      {mode === 'local' ? <MahjongGamePage /> : <OnlineLobbyPage />}
+      {mode === 'local'
+        ? <MahjongGamePage />
+        : <OnlineLobbyPage onGamePageActiveChange={setOnlineGamePageActive} />}
     </div>
   );
 }

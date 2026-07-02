@@ -8,6 +8,7 @@ export interface DiscardPlayerEntry {
   discards: Tile[];
   isCurrent: boolean;
   isMe: boolean;
+  title?: string;
 }
 
 export interface MobileCenterDiscardAreaProps {
@@ -30,20 +31,30 @@ export function MobileCenterDiscardArea({ players, lastDiscardTile, onOpenHistor
         background: 'rgba(0,0,0,0.25)',
         borderRadius: '10px',
         border: '1px solid rgba(255,255,255,0.06)',
-        padding: '6px 8px',
+        padding: '5px 6px',
         boxSizing: 'border-box',
       }}
     >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: players.length > 2 ? '1fr 1fr' : '1fr',
+          gap: '4px 6px',
+          alignItems: 'center',
+        }}
+      >
       {players.map((player) => {
         if (!player.discards || player.discards.length === 0) {
           return (
             <div
               key={player.seat}
+              title={player.title || player.playerName}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                minHeight: '20px',
+                minHeight: '18px',
+                minWidth: 0,
               }}
             >
               <span
@@ -51,11 +62,11 @@ export function MobileCenterDiscardArea({ players, lastDiscardTile, onOpenHistor
                   fontSize: '0.62rem',
                   color: player.isCurrent ? 'var(--gold-accent)' : 'rgba(255,255,255,0.4)',
                   whiteSpace: 'nowrap',
-                  minWidth: '36px',
+                  minWidth: '18px',
                   fontWeight: player.isCurrent ? 'bold' : 'normal',
                 }}
               >
-                {player.isMe ? '我' : player.playerName}
+                {player.playerName}
               </span>
               <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>
                 未出牌
@@ -64,17 +75,19 @@ export function MobileCenterDiscardArea({ players, lastDiscardTile, onOpenHistor
           );
         }
 
-        const maxVisible = 6;
+        const maxVisible = 2;
         const tilesToShow = player.discards.slice(-maxVisible).reverse();
         const hiddenCount = Math.max(0, player.discards.length - maxVisible);
 
         return (
           <div
             key={player.seat}
+            title={player.title || player.playerName}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
+              minWidth: 0,
             }}
           >
             {/* Player label */}
@@ -83,12 +96,12 @@ export function MobileCenterDiscardArea({ players, lastDiscardTile, onOpenHistor
                 fontSize: '0.62rem',
                 color: player.isCurrent ? 'var(--gold-accent)' : 'rgba(255,255,255,0.55)',
                 whiteSpace: 'nowrap',
-                minWidth: '30px',
+                minWidth: '18px',
                 flexShrink: 0,
                 fontWeight: player.isCurrent ? 'bold' : 'normal',
               }}
             >
-              {player.isMe ? '我' : player.playerName}
+              {player.playerName}
             </span>
             
             {/* Discard tiles - latest first */}
@@ -101,7 +114,8 @@ export function MobileCenterDiscardArea({ players, lastDiscardTile, onOpenHistor
                 gap: '2px',
                 flex: 1,
                 cursor: 'pointer',
-                overflowX: 'hidden'
+                overflowX: 'hidden',
+                minWidth: 0,
               }}
             >
               {tilesToShow.map((t, idx) => {
@@ -115,7 +129,7 @@ export function MobileCenterDiscardArea({ players, lastDiscardTile, onOpenHistor
                       animation: isLatest ? 'latestDiscardPulse 1.5s ease-in-out 2' : 'none',
                     }}
                   >
-                    <TileView tile={t} isLatestDiscard={isLatest} />
+                    <TileView tile={t} isLatestDiscard={isLatest} size="compact" />
                   </div>
                 );
               })}
@@ -131,20 +145,21 @@ export function MobileCenterDiscardArea({ players, lastDiscardTile, onOpenHistor
                     background: 'rgba(241,196,15,0.15)',
                     border: '1px solid var(--gold-accent)',
                     color: 'var(--gold-accent)',
-                    fontSize: '0.58rem',
+                    fontSize: '0.56rem',
                     fontWeight: 'bold',
                     marginLeft: '4px',
                     whiteSpace: 'nowrap',
                     flexShrink: 0
                   }}
                 >
-                  +{hiddenCount} 历史
+                  +{hiddenCount}
                 </div>
               )}
             </div>
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

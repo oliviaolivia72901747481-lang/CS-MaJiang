@@ -26,6 +26,12 @@ function makePlayer(seat: 0|1|2|3, isMe: boolean, isCurrent: boolean, discardCou
   };
 }
 
+function getDiscardRows(element: any): any[] {
+  const grid = element.props.children;
+  const rows = grid.props.children;
+  return Array.isArray(rows) ? rows : [rows];
+}
+
 describe('Mobile Center Discard Area Tests', () => {
 
   it('1. 手机端渲染中心弃牌区', () => {
@@ -38,9 +44,10 @@ describe('Mobile Center Discard Area Tests', () => {
   it('2. 2 人局显示 2 条弃牌河', () => {
     const players = [makePlayer(0, true, false, 3), makePlayer(1, false, true, 2)];
     const el = MobileCenterDiscardArea({ players }) as any;
-    expect(el.props.children).toHaveLength(2);
-    expect(el.props.children[0].props.children[0].props.children).toBe('我');
-    expect(el.props.children[1].props.children[0].props.children).toBe('玩家1');
+    const rows = getDiscardRows(el);
+    expect(rows).toHaveLength(2);
+    expect(rows[0].props.children[0].props.children).toBe('我');
+    expect(rows[1].props.children[0].props.children).toBe('玩家1');
   });
 
   it('3. 3 人局显示 3 条弃牌河', () => {
@@ -50,10 +57,11 @@ describe('Mobile Center Discard Area Tests', () => {
       makePlayer(2, false, true, 3),
     ];
     const el = MobileCenterDiscardArea({ players }) as any;
-    expect(el.props.children).toHaveLength(3);
-    expect(el.props.children[0].props.children[0].props.children).toBe('我');
-    expect(el.props.children[1].props.children[0].props.children).toBe('玩家1');
-    expect(el.props.children[2].props.children[0].props.children).toBe('玩家2');
+    const rows = getDiscardRows(el);
+    expect(rows).toHaveLength(3);
+    expect(rows[0].props.children[0].props.children).toBe('我');
+    expect(rows[1].props.children[0].props.children).toBe('玩家1');
+    expect(rows[2].props.children[0].props.children).toBe('玩家2');
   });
 
   it('4. 4 人局显示 4 条弃牌河', () => {
@@ -64,11 +72,12 @@ describe('Mobile Center Discard Area Tests', () => {
       makePlayer(3, false, false, 2),
     ];
     const el = MobileCenterDiscardArea({ players }) as any;
-    expect(el.props.children).toHaveLength(4);
-    expect(el.props.children[0].props.children[0].props.children).toBe('我');
-    expect(el.props.children[1].props.children[0].props.children).toBe('玩家1');
-    expect(el.props.children[2].props.children[0].props.children).toBe('玩家2');
-    expect(el.props.children[3].props.children[0].props.children).toBe('玩家3');
+    const rows = getDiscardRows(el);
+    expect(rows).toHaveLength(4);
+    expect(rows[0].props.children[0].props.children).toBe('我');
+    expect(rows[1].props.children[0].props.children).toBe('玩家1');
+    expect(rows[2].props.children[0].props.children).toBe('玩家2');
+    expect(rows[3].props.children[0].props.children).toBe('玩家3');
   });
 
   it('5. inactive seats 不显示弃牌河（empty players → null）', () => {
@@ -86,7 +95,7 @@ describe('Mobile Center Discard Area Tests', () => {
       isMe: true,
     }];
     const el = MobileCenterDiscardArea({ players, lastDiscardTile: lastTile }) as any;
-    const row = el.props.children[0];
+    const row = getDiscardRows(el)[0];
     const tilesWrapper = row.props.children[1];
     const tiles = tilesWrapper.props.children;
     // tiles[0] is the tilesArray, tiles[0][0] is the latest tile (lastTile) because of latest-first reversing
@@ -99,7 +108,7 @@ describe('Mobile Center Discard Area Tests', () => {
       makePlayer(0, true, true, 0),
     ];
     const el = MobileCenterDiscardArea({ players }) as any;
-    const row = el.props.children[0];
+    const row = getDiscardRows(el)[0];
     const textSpan = row.props.children[1];
     expect(textSpan.props.children).toBe('未出牌');
   });

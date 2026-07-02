@@ -366,6 +366,45 @@ body {
   margin-bottom: 2px;
 }
 
+.mahjong-tile.tile-compact {
+  width: 30px;
+  height: 42px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.28), inset 0 -3px 0 #e0e0e0;
+}
+
+.mahjong-tile.tile-compact .tile-rank {
+  font-size: 0.92rem;
+  margin-top: 1px;
+}
+
+.mahjong-tile.tile-compact .tile-suit {
+  font-size: 0.68rem;
+  margin-bottom: 1px;
+}
+
+.mahjong-tile.tile-mini {
+  width: 24px;
+  height: 34px;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25), inset 0 -2px 0 #e0e0e0;
+}
+
+.mahjong-tile.tile-mini .tile-rank {
+  font-size: 0.75rem;
+  margin-top: 1px;
+}
+
+.mahjong-tile.tile-mini .tile-suit {
+  font-size: 0.55rem;
+  margin-bottom: 1px;
+}
+
+.mahjong-tile.tile-mini .tile-back-inner,
+.mahjong-tile.tile-compact .tile-back-inner {
+  font-size: 1rem;
+}
+
 .color-wan { color: var(--color-wan); }
 .color-tong { color: var(--color-tong); }
 .color-tiao { color: var(--color-tiao); }
@@ -2464,5 +2503,4 @@ body {
     opacity: 1;
   }
 }
-
 

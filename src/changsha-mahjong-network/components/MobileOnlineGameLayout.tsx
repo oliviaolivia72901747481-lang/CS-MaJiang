@@ -18,6 +18,7 @@ import { MobileDiscardHistoryDrawer } from './MobileDiscardHistoryDrawer.jsx';
 import { ActionSourceTileBanner } from './ActionSourceTileBanner.jsx';
 import { ActionCandidatePanel } from './ActionCandidatePanel.jsx';
 import { buildActionHighlightModel } from '../utils/action-highlight-utils.js';
+import { getRelativeSeatLabel } from '../utils/relative-seat-label.js';
 import { 
   getLatestDiscardEvent, 
   getActionSourceEvent,
@@ -66,6 +67,7 @@ export function MobileOnlineGameLayout({
   const [hoveredCandidateId, setHoveredCandidateId] = useState<string | null>(null);
   const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
   const [historyPlayerSeat, setHistoryPlayerSeat] = useState<0 | 1 | 2 | 3>(0);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   if (seat === undefined) return null;
 
@@ -176,6 +178,11 @@ export function MobileOnlineGameLayout({
 
   const latestDiscardEvent = getLatestDiscardEvent(view, seat);
   const lastDiscardTile = latestDiscardEvent && latestDiscardEvent.stillInRiver ? latestDiscardEvent.tile : undefined;
+  const activeSeats = [seat, ...view.opponents.map(o => o.seat)].sort((a, b) => a - b) as Array<0 | 1 | 2 | 3>;
+  const getRelativeLabel = (targetSeat: 0 | 1 | 2 | 3) => getRelativeSeatLabel(seat, targetSeat, activeSeats);
+  const relativeLatestDiscardEvent = latestDiscardEvent
+    ? { ...latestDiscardEvent, playerLabel: getRelativeLabel(latestDiscardEvent.seat as 0 | 1 | 2 | 3) }
+    : latestDiscardEvent;
 
   const latestLog = view.logs.length > 0 ? view.logs[view.logs.length - 1] : null;
 
@@ -202,6 +209,22 @@ export function MobileOnlineGameLayout({
     }
 
     return undefined;
+  };
+
+  const handleLeaveFromMore = () => {
+    const isSettlement = view.phase === 'settlement' || view.phase === 'ended';
+    const message = isSettlement
+      ? '确定离开结算页面吗？'
+      : '对局已开始，退出后将由 AI 托管，是否确认？';
+
+    if (confirm(message)) {
+      if (leaveRoom) {
+        leaveRoom('user_leave').catch(() => {});
+      } else {
+        localStorage.removeItem('online_room_id');
+        window.location.reload();
+      }
+    }
   };
 
   return (
@@ -248,14 +271,15 @@ export function MobileOnlineGameLayout({
 
         {/* CENTER DISCARD AREA — Fix 3: all players' discards at center */}
         {(() => {
-          const allSeats = [seat, ...view.opponents.map(o => o.seat)].sort((a, b) => a - b) as Array<0|1|2|3>;
+          const allSeats = activeSeats;
 
           const dockPlayers: LatestDiscardPlayer[] = allSeats.map(s => {
             const isMe = s === seat;
             const player = getPlayerAtSeat(s);
             return {
               seat: s,
-              playerName: isMe ? '我' : (player.playerName || `${s}号`),
+              playerName: getRelativeLabel(s),
+              title: player.playerName || `${s}号`,
               isMe,
               latestTile: player.discards && player.discards.length > 0 ? player.discards[player.discards.length - 1] : undefined
             };
@@ -266,7 +290,8 @@ export function MobileOnlineGameLayout({
             const player = getPlayerAtSeat(s);
             return {
               seat: s,
-              playerName: isMe ? '我' : (player.playerName || `${s}号`),
+              playerName: getRelativeLabel(s),
+              title: player.playerName || `${s}号`,
               discards: player.discards,
               isCurrent: view.currentSeat === s,
               isMe,
@@ -278,7 +303,7 @@ export function MobileOnlineGameLayout({
               <MobileLatestDiscardDock
                 players={dockPlayers}
                 globalLatestTile={lastDiscardTile}
-                latestDiscardEvent={latestDiscardEvent}
+                latestDiscardEvent={relativeLatestDiscardEvent}
               />
               <MobileCenterDiscardArea
                 players={discardPlayers}
@@ -304,7 +329,7 @@ export function MobileOnlineGameLayout({
             textAlign: 'center',
             boxShadow: '0 2px 8px rgba(241,196,15,0.2)'
           }}>
-            {selectedTileId ? '再次点击该牌以确认打出 🀄' : '👉 请点击下方手牌选择出牌'}
+            {selectedTileId ? '再点确认出牌' : '你出牌'}
           </div>
         )}
       </div>
@@ -359,7 +384,6 @@ export function MobileOnlineGameLayout({
           WebkitOverflowScrolling: 'touch',
           borderTop: '1px solid rgba(255,255,255,0.06)',
         }}>
-          <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.45)', marginBottom: '3px' }}>我的副露</div>
           <MobileMeldArea melds={pBottom.melds} />
         </div>
       )}
@@ -378,44 +402,59 @@ export function MobileOnlineGameLayout({
         )}
       </div>
 
-      {/* 6. Utility Collapsed Drawer Buttons */}
-      <div style={{ display: 'flex', justifyContent: 'space-around', padding: '8px', background: 'rgba(0,0,0,0.6)', gap: '10px', fontSize: '0.75rem' }}>
-        <button 
-          onClick={() => {
-            const isSettlement = view.phase === 'settlement' || view.phase === 'ended';
-            const msg = isSettlement 
-              ? '确定离开结算页面吗？' 
-              : '对局已开始，退出后将由 AI 托管，是否确认？';
-            if (confirm(msg)) {
-              if (leaveRoom) {
-                leaveRoom('user_leave').catch(() => {});
-              } else {
-                localStorage.removeItem('online_room_id');
-                window.location.reload();
-              }
-            }
-          }}
-          style={{ background: 'rgba(231, 76, 60, 0.2)', border: '1px solid #e74c3c', borderRadius: '4px', padding: '6px 10px', color: '#f5b7b1', cursor: 'pointer', fontWeight: 'bold' }}
+      {/* 6. Compact secondary tools */}
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '5px 8px', background: 'rgba(0,0,0,0.52)', fontSize: '0.75rem' }}>
+        <button
+          onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+          aria-expanded={moreMenuOpen}
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '14px', padding: '5px 14px', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}
         >
-          🚪 离开
+          更多
         </button>
 
-        <button 
-          onClick={() => setLogDrawerOpen(true)}
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '6px 10px', color: '#fff', cursor: 'pointer' }}
-        >
-          📖 日志
-        </button>
+        {moreMenuOpen && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '34px',
+              left: '10px',
+              right: '10px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              padding: '10px',
+              borderRadius: '10px',
+              background: 'rgba(10, 20, 15, 0.98)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              boxShadow: '0 -8px 24px rgba(0,0,0,0.65)',
+              zIndex: 30,
+            }}
+          >
+            <button
+              onClick={() => setLogDrawerOpen(true)}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', padding: '7px 10px', color: '#fff', cursor: 'pointer' }}
+            >
+              对局日志
+            </button>
 
-        <ConnectionDiagnosticPanel 
-          connected={connected}
-          roomId={roomId}
-          seat={seat}
-          socketId={undefined}
-          lastError={undefined}
-        />
+            <ConnectionDiagnosticPanel
+              connected={connected}
+              roomId={roomId}
+              seat={seat}
+              socketId={undefined}
+              lastError={undefined}
+            />
 
-        <OnlineHelpPanel />
+            <OnlineHelpPanel />
+
+            <button
+              onClick={handleLeaveFromMore}
+              style={{ background: 'rgba(231, 76, 60, 0.2)', border: '1px solid #e74c3c', borderRadius: '6px', padding: '7px 10px', color: '#f5b7b1', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              离开房间
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 7. Log bottom sheet drawer overlay */}

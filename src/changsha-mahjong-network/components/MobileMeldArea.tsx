@@ -26,15 +26,15 @@ const MELD_COLOR: Record<string, string> = {
 export function MobileMeldArea({ melds, compact = false }: MobileMeldAreaProps) {
   if (!melds || melds.length === 0) return null;
 
-  const tileSize = compact ? 'calc((100vw - 120px) / 18)' : 'calc((100vw - 64px) / 16)';
-  const maxTileSize = compact ? '28px' : '38px';
+  const tileSize = compact ? 'calc((100vw - 136px) / 20)' : 'calc((100vw - 80px) / 18)';
+  const maxTileSize = compact ? '24px' : '32px';
 
   return (
     <div
       className="mobile-meld-area"
       style={{
         display: 'flex',
-        gap: compact ? '4px' : '6px',
+        gap: compact ? '3px' : '5px',
         flexWrap: 'wrap',
         alignItems: 'flex-start',
         width: '100%',
@@ -62,11 +62,11 @@ export function MobileMeldArea({ melds, compact = false }: MobileMeldAreaProps) 
             <span
               className="meld-type-label"
               style={{
-                fontSize: compact ? '0.55rem' : '0.62rem',
+                fontSize: compact ? '0.52rem' : '0.58rem',
                 fontWeight: 'bold',
                 color,
                 background: `${color}22`,
-                padding: '1px 4px',
+                padding: '1px 3px',
                 borderRadius: '4px',
                 whiteSpace: 'nowrap',
               }}
@@ -80,7 +80,7 @@ export function MobileMeldArea({ melds, compact = false }: MobileMeldAreaProps) 
                 gap: '1px',
                 border: `1px solid ${color}55`,
                 borderRadius: '4px',
-                padding: '2px',
+                padding: compact ? '1px' : '2px',
                 background: 'rgba(0,0,0,0.3)',
               }}
             >
@@ -93,10 +93,10 @@ export function MobileMeldArea({ melds, compact = false }: MobileMeldAreaProps) 
                     style={{
                       width: tileSize,
                       maxWidth: maxTileSize,
-                      fontSize: compact ? '0.6rem' : '0.75rem',
+                      fontSize: compact ? '0.55rem' : '0.68rem',
                     }}
                   >
-                    <TileView tile={t} hidden={hidden} />
+                    <TileView tile={t} hidden={hidden} size={compact ? 'mini' : 'compact'} />
                   </div>
                 );
               })}

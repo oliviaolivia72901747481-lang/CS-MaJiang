@@ -87,7 +87,7 @@ describe('Mobile Online Game Layout Tests', () => {
     expect(overlay).toBeUndefined();
   });
 
-  it('3. renders diagnostic panel button as collapsed trigger by default', () => {
+  it('3. collapses secondary tools behind a More button by default', () => {
     const el = MobileOnlineGameLayout({
       view: mockView,
       roomId: '123456',
@@ -97,10 +97,10 @@ describe('Mobile Online Game Layout Tests', () => {
       performAction: () => {},
       actionPending: false
     }) as any;
-    const bottomControls = el.props.children.find((c: any) => c && c.props && c.props.style && c.props.style.background === 'rgba(0,0,0,0.6)');
+    const bottomControls = el.props.children.find((c: any) => c && c.props && c.props.style && c.props.style.background === 'rgba(0,0,0,0.52)');
     expect(bottomControls).toBeDefined();
-    const diagBtn = bottomControls.props.children[1];
-    expect(diagBtn).toBeDefined();
+    expect(JSON.stringify(bottomControls)).toContain('更多');
+    expect(JSON.stringify(bottomControls)).not.toContain('打开局域网诊断自检面板');
   });
 
   it('4. compresses opponent cards into three narrow strips', () => {

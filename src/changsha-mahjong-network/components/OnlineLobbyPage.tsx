@@ -8,7 +8,11 @@ import { LanConnectPanel } from './LanConnectPanel.jsx';
 import { OnlineHelpPanel } from './OnlineHelpPanel.jsx';
 import { buildJoinUrlCandidates, selectRecommendedJoinUrl } from '../client/lan-url-resolver.js';
 
-export function OnlineLobbyPage() {
+export interface OnlineLobbyPageProps {
+  onGamePageActiveChange?: (active: boolean) => void;
+}
+
+export function OnlineLobbyPage({ onGamePageActiveChange }: OnlineLobbyPageProps = {}) {
   const {
     connected,
     roomId,
@@ -126,11 +130,19 @@ export function OnlineLobbyPage() {
     }
   };
 
+  const gameView = view && view.phase !== 'waiting' ? view : null;
+  const gamePageActive = gameView !== null;
+
+  useEffect(() => {
+    onGamePageActiveChange?.(gamePageActive);
+    return () => onGamePageActiveChange?.(false);
+  }, [gamePageActive, onGamePageActiveChange]);
+
   // If game has started, render game board
-  if (view && view.phase !== 'waiting') {
+  if (gamePageActive) {
     return (
       <OnlineGamePage 
-        view={view}
+        view={gameView}
         roomId={roomId}
         seat={seat}
         connected={connected}

@@ -178,8 +178,8 @@ describe('v0.8.6-hotfix-mobile-discard-dedupe', () => {
   // Scenario 4: My melds area preserved
   // ---------------------------------------------------------------------------
   describe('Scenario 4: My melds area preserved in MobileOnlineGameLayout', () => {
-    it('MobileOnlineGameLayout renders "我的副露" section with MobileMeldArea', () => {
-      expect(mobileLayoutSource).toContain('我的副露');
+    it('MobileOnlineGameLayout keeps my melds while removing the redundant title', () => {
+      expect(mobileLayoutSource).not.toContain('我的副露');
       expect(mobileLayoutSource).toContain('<MobileMeldArea melds={pBottom.melds}');
     });
 
@@ -202,8 +202,8 @@ describe('v0.8.6-hotfix-mobile-discard-dedupe', () => {
       expect(mobileLayoutSource).toContain('getActionSourceEvent');
     });
 
-    it('MobileOnlineGameLayout still passes latestDiscardEvent to MobileLatestDiscardDock', () => {
-      expect(mobileLayoutSource).toContain('latestDiscardEvent={latestDiscardEvent}');
+    it('MobileOnlineGameLayout still passes the latest discard event to MobileLatestDiscardDock', () => {
+      expect(mobileLayoutSource).toContain('latestDiscardEvent={relativeLatestDiscardEvent}');
     });
 
     it('MobileOnlineGameLayout still passes lastDiscardTile to MobileCenterDiscardArea', () => {
