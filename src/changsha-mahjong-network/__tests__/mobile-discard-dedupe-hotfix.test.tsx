@@ -4,8 +4,8 @@
  * v0.8.6-hotfix-mobile-discard-dedupe
  *
  * Verifies that the mobile opponent strip no longer renders ordinary discards.
- * Discards are only shown in the center area (MobileLatestDiscardDock,
- * MobileCenterDiscardArea, MobileDiscardHistoryDrawer).
+ * Discards are only shown in the center area (MobileCenterDiscardArea,
+ * MobileDiscardHistoryDrawer).
  * Player-facing areas only show melds (chi/peng/gang).
  */
 
@@ -124,9 +124,9 @@ describe('v0.8.6-hotfix-mobile-discard-dedupe', () => {
       expect(importsTileView).toBe(false);
     });
 
-    it('MobileOnlineGameLayout still renders MobileLatestDiscardDock', () => {
-      expect(mobileLayoutSource).toContain('MobileLatestDiscardDock');
-      expect(mobileLayoutSource).toContain('<MobileLatestDiscardDock');
+    it('MobileOnlineGameLayout no longer renders the redundant MobileLatestDiscardDock', () => {
+      expect(mobileLayoutSource).not.toContain('MobileLatestDiscardDock');
+      expect(mobileLayoutSource).not.toContain('<MobileLatestDiscardDock');
     });
 
     it('MobileOnlineGameLayout still renders MobileCenterDiscardArea', () => {
@@ -193,17 +193,20 @@ describe('v0.8.6-hotfix-mobile-discard-dedupe', () => {
   // ---------------------------------------------------------------------------
   // Scenario 5: latestDiscardEvent not affected
   // ---------------------------------------------------------------------------
-  describe('Scenario 5: latestDiscardEvent still used in MobileOnlineGameLayout', () => {
+  describe('Scenario 5: latest discard and action source still used in MobileOnlineGameLayout', () => {
     it('MobileOnlineGameLayout still calls getLatestDiscardEvent', () => {
       expect(mobileLayoutSource).toContain('getLatestDiscardEvent');
     });
 
-    it('MobileOnlineGameLayout still calls getActionSourceEvent', () => {
-      expect(mobileLayoutSource).toContain('getActionSourceEvent');
+    it('MobileOnlineGameLayout still derives action source from the highlight model', () => {
+      expect(mobileLayoutSource).toContain('buildActionHighlightModel');
+      expect(mobileLayoutSource).toContain('relativeActionSourceEvent');
+      expect(mobileLayoutSource).toContain('sourcePlayerLabel: getRelativeLabel');
     });
 
-    it('MobileOnlineGameLayout still passes the latest discard event to MobileLatestDiscardDock', () => {
-      expect(mobileLayoutSource).toContain('latestDiscardEvent={relativeLatestDiscardEvent}');
+    it('MobileOnlineGameLayout still resolves latest discard for the center river', () => {
+      expect(mobileLayoutSource).toContain('const latestDiscardEvent = getLatestDiscardEvent(view, seat)');
+      expect(mobileLayoutSource).toContain('const lastDiscardTile = latestDiscardEvent');
     });
 
     it('MobileOnlineGameLayout still passes lastDiscardTile to MobileCenterDiscardArea', () => {

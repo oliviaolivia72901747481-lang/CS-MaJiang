@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { MobileLatestDiscardDock } from '../components/MobileLatestDiscardDock.jsx';
 import { MobileOnlineGameLayout } from '../components/MobileOnlineGameLayout.jsx';
+import { MobileCenterDiscardArea } from '../components/MobileCenterDiscardArea.jsx';
 import { TileView } from '../components/TileView.jsx';
 import { Tile } from '../../changsha-mahjong/types/tile.js';
 
@@ -104,7 +105,7 @@ describe('MobileLatestDiscardDock Tests', () => {
     expect(tile3View.props.isLatestDiscard).toBe(true);
   });
 
-  it('3. activeSeats integration in MobileOnlineGameLayout shows only active players', () => {
+  it('3. activeSeats integration in MobileOnlineGameLayout sends only active players to center discard area', () => {
     // 3-player game state (1 opponent is missing, total 3 active seats: 0, 1, 2)
     const mockView: any = {
       roomId: '123',
@@ -143,11 +144,14 @@ describe('MobileLatestDiscardDock Tests', () => {
     }) as any;
 
     const dockEl = findElements(el, x => x && x.type && x.type.name === 'MobileLatestDiscardDock');
-    expect(dockEl).toHaveLength(1);
+    expect(dockEl).toHaveLength(0);
 
-    const dockProps = dockEl[0].props;
-    expect(dockProps.players).toHaveLength(3);
-    expect(dockProps.players.map((p: any) => p.seat)).toEqual([0, 1, 2]);
-    expect(dockProps.globalLatestTile).toEqual(tile3);
+    const centerEl = findElements(el, x => x && x.type === MobileCenterDiscardArea);
+    expect(centerEl).toHaveLength(1);
+
+    const centerProps = centerEl[0].props;
+    expect(centerProps.players).toHaveLength(3);
+    expect(centerProps.players.map((p: any) => p.seat)).toEqual([0, 1, 2]);
+    expect(centerProps.lastDiscardTile).toEqual(tile3);
   });
 });

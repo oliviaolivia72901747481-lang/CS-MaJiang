@@ -1,7 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { MobileOnlineGameLayout } from '../components/MobileOnlineGameLayout.jsx';
-import { ActionSourceTileBanner } from '../components/ActionSourceTileBanner.jsx';
 import { ActionCandidatePanel } from '../components/ActionCandidatePanel.jsx';
 
 // Mock react
@@ -69,7 +68,7 @@ describe('Mobile Action Highlight integration tests', () => {
     ]
   };
 
-  it('1. MobileOnlineGameLayout renders ActionSourceTileBanner and ActionCandidatePanel', () => {
+  it('1. MobileOnlineGameLayout moves action source into ActionCandidatePanel compact title', () => {
     const el = MobileOnlineGameLayout({
       view: mockView,
       roomId: '123456',
@@ -82,15 +81,10 @@ describe('Mobile Action Highlight integration tests', () => {
 
     expect(el).not.toBeNull();
     
-    // Find the ActionSourceTileBanner and ActionCandidatePanel directly
-    let banner: any = null;
     let candidatePanel: any = null;
 
     const searchChildren = (node: any) => {
       if (!node) return;
-      if (node.type === ActionSourceTileBanner) {
-        banner = node;
-      }
       if (node.type === ActionCandidatePanel) {
         candidatePanel = node;
       }
@@ -102,13 +96,11 @@ describe('Mobile Action Highlight integration tests', () => {
     };
     searchChildren(el);
 
-    expect(banner).toBeTruthy();
-    expect(banner.props.sourceEvent.playerLabel).toBe('Bot 1');
-    expect(banner.props.sourceEvent.tileKey).toBe('wan_6');
-
     expect(candidatePanel).toBeTruthy();
+    expect(candidatePanel.props.compactTitle).toBe('对 打出 6万, 可吃');
     expect(candidatePanel.props.candidates).toHaveLength(1);
     expect(candidatePanel.props.candidates[0].actionType).toBe('chi');
+    expect(candidatePanel.props.candidates[0].sourcePlayerLabel).toBe('对');
   });
 
   it('2. MobileOnlineGameLayout passes getHandTileHighlight to MobilePlayerHand', () => {

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { PlayerVisibleView, NetworkPlayerAction } from '../server/network-types.js';
 import { Tile } from '../../changsha-mahjong/types/tile.js';
-import { TileView } from './TileView.jsx';
 import { MobilePlayerHand } from './MobilePlayerHand.jsx';
-import { MobileActionBar } from './MobileActionBar.jsx';
 import { MobileOpponentStrip } from './MobileOpponentStrip.jsx';
 import { MobileGameLogDrawer } from './MobileGameLogDrawer.jsx';
 import { SettlementModal } from './SettlementModal.jsx';
@@ -13,18 +11,11 @@ import { ConnectionDiagnosticPanel } from './ConnectionDiagnosticPanel.jsx';
 import { OnlineHelpPanel } from './OnlineHelpPanel.jsx';
 import { MobileMeldArea } from './MobileMeldArea.jsx';
 import { MobileCenterDiscardArea, DiscardPlayerEntry } from './MobileCenterDiscardArea.jsx';
-import { MobileLatestDiscardDock, LatestDiscardPlayer } from './MobileLatestDiscardDock.jsx';
 import { MobileDiscardHistoryDrawer } from './MobileDiscardHistoryDrawer.jsx';
-import { ActionSourceTileBanner } from './ActionSourceTileBanner.jsx';
 import { ActionCandidatePanel } from './ActionCandidatePanel.jsx';
-import { buildActionHighlightModel } from '../utils/action-highlight-utils.js';
+import { buildActionHighlightModel, getTileChineseName } from '../utils/action-highlight-utils.js';
 import { getRelativeSeatLabel } from '../utils/relative-seat-label.js';
-import { 
-  getLatestDiscardEvent, 
-  getActionSourceEvent,
-  getPlayerLabelBySeat,
-  getPlayerDiscardsBySeat
-} from '../utils/latest-discard-helper.js';
+import { getLatestDiscardEvent } from '../utils/latest-discard-helper.js';
 
 export interface MobileOnlineGameLayoutProps {
   view: PlayerVisibleView;
@@ -173,16 +164,40 @@ export function MobileOnlineGameLayout({
   };
 
   const highlightModel = buildActionHighlightModel(view, seat);
-  const actionSourceEvent = highlightModel.sourceEvent;
-  const sourceTile = actionSourceEvent ? actionSourceEvent.tile : null;
-
   const latestDiscardEvent = getLatestDiscardEvent(view, seat);
   const lastDiscardTile = latestDiscardEvent && latestDiscardEvent.stillInRiver ? latestDiscardEvent.tile : undefined;
   const activeSeats = [seat, ...view.opponents.map(o => o.seat)].sort((a, b) => a - b) as Array<0 | 1 | 2 | 3>;
   const getRelativeLabel = (targetSeat: 0 | 1 | 2 | 3) => getRelativeSeatLabel(seat, targetSeat, activeSeats);
-  const relativeLatestDiscardEvent = latestDiscardEvent
-    ? { ...latestDiscardEvent, playerLabel: getRelativeLabel(latestDiscardEvent.seat as 0 | 1 | 2 | 3) }
-    : latestDiscardEvent;
+  const relativeActionSourceEvent = highlightModel.sourceEvent && activeSeats.includes(highlightModel.sourceEvent.seat as 0 | 1 | 2 | 3)
+    ? { ...highlightModel.sourceEvent, playerLabel: getRelativeLabel(highlightModel.sourceEvent.seat as 0 | 1 | 2 | 3) }
+    : null;
+  const relativeCandidateGroups = highlightModel.candidateGroups.map(candidate => (
+    candidate.sourceSeat !== undefined && activeSeats.includes(candidate.sourceSeat as 0 | 1 | 2 | 3)
+      ? { ...candidate, sourcePlayerLabel: getRelativeLabel(candidate.sourceSeat as 0 | 1 | 2 | 3) }
+      : candidate
+  ));
+
+  const actionTypeLabels: Record<string, string> = {
+    chi: '可吃',
+    peng: '可碰',
+    mingGang: '可杠',
+    anGang: '可暗杠',
+    buGang: '可补杠',
+    hu: '可胡',
+    ziMo: '可自摸',
+  };
+  const nonPassActionLabels = Array.from(new Set(
+    relativeCandidateGroups.map(candidate => actionTypeLabels[candidate.actionType] || candidate.label)
+  ));
+  const compactActionTitle = (() => {
+    if (relativeActionSourceEvent) {
+      const actions = nonPassActionLabels.length > 0 ? `, ${nonPassActionLabels.join(' / ')}` : '';
+      return `${relativeActionSourceEvent.playerLabel} 打出 ${getTileChineseName(relativeActionSourceEvent.tile)}${actions}`;
+    }
+
+    const gangOnlyTitle = nonPassActionLabels.find(label => label === '可暗杠' || label === '可补杠');
+    return gangOnlyTitle || undefined;
+  })();
 
   const latestLog = view.logs.length > 0 ? view.logs[view.logs.length - 1] : null;
 
@@ -273,18 +288,6 @@ export function MobileOnlineGameLayout({
         {(() => {
           const allSeats = activeSeats;
 
-          const dockPlayers: LatestDiscardPlayer[] = allSeats.map(s => {
-            const isMe = s === seat;
-            const player = getPlayerAtSeat(s);
-            return {
-              seat: s,
-              playerName: getRelativeLabel(s),
-              title: player.playerName || `${s}号`,
-              isMe,
-              latestTile: player.discards && player.discards.length > 0 ? player.discards[player.discards.length - 1] : undefined
-            };
-          });
-
           const discardPlayers: DiscardPlayerEntry[] = allSeats.map(s => {
             const isMe = s === seat;
             const player = getPlayerAtSeat(s);
@@ -300,11 +303,6 @@ export function MobileOnlineGameLayout({
 
           return (
             <React.Fragment>
-              <MobileLatestDiscardDock
-                players={dockPlayers}
-                globalLatestTile={lastDiscardTile}
-                latestDiscardEvent={relativeLatestDiscardEvent}
-              />
               <MobileCenterDiscardArea
                 players={discardPlayers}
                 lastDiscardTile={lastDiscardTile}
@@ -337,15 +335,14 @@ export function MobileOnlineGameLayout({
       {/* 4. Action bar floating above hand */}
       {view.pendingActions.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginBottom: '8px', width: '100%', padding: '0 10px', boxSizing: 'border-box' }}>
-          <ActionSourceTileBanner sourceEvent={highlightModel.sourceEvent} />
-          
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', width: '100%', justifyContent: 'center' }}>
             <ActionCandidatePanel
-              candidates={highlightModel.candidateGroups}
+              candidates={relativeCandidateGroups}
               actionPending={actionPending}
               onSelect={(payload) => performAction(payload)}
               hoveredCandidateId={hoveredCandidateId}
               onHoverCandidate={setHoveredCandidateId}
+              compactTitle={compactActionTitle}
             />
             {passAction && (
               <button 

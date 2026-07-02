@@ -119,16 +119,35 @@ export function MobileCenterDiscardArea({ players, lastDiscardTile, onOpenHistor
               }}
             >
               {tilesToShow.map((t, idx) => {
+                const isSeatLatest = idx === 0;
                 const isLatest = lastDiscardTile && t.instanceId === lastDiscardTile.instanceId;
                 return (
                   <div
                     key={t.instanceId || idx}
-                    className={isLatest ? 'discard-tile-latest' : ''}
+                    className={isLatest ? 'discard-tile-latest tile-global-latest-discard' : ''}
                     style={{
+                      position: 'relative',
                       flexShrink: 0,
                       animation: isLatest ? 'latestDiscardPulse 1.5s ease-in-out 2' : 'none',
                     }}
                   >
+                    {isSeatLatest && (
+                      <span
+                        className="tile-seat-latest-dot"
+                        style={{
+                          position: 'absolute',
+                          top: '-2px',
+                          right: '-2px',
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          background: '#ff4d4f',
+                          border: '1px solid rgba(255,255,255,0.9)',
+                          boxShadow: isLatest ? '0 0 8px rgba(255,77,79,0.95)' : '0 0 4px rgba(255,77,79,0.55)',
+                          zIndex: 2,
+                        }}
+                      />
+                    )}
                     <TileView tile={t} isLatestDiscard={isLatest} size="compact" />
                   </div>
                 );

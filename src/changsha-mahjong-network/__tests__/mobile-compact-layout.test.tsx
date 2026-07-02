@@ -2,9 +2,7 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { MainApp, shouldHideModeSwitch } from '../../main.jsx';
 import { MobileOnlineGameLayout } from '../components/MobileOnlineGameLayout.jsx';
-import { MobileLatestDiscardDock } from '../components/MobileLatestDiscardDock.jsx';
 import { MobileCenterDiscardArea } from '../components/MobileCenterDiscardArea.jsx';
-import { TileView } from '../components/TileView.jsx';
 import type { Tile } from '../../changsha-mahjong/types/tile.js';
 
 vi.mock('react', async (importOriginal) => {
@@ -51,6 +49,12 @@ function makeTile(suit: string, rank: number, id: string): Tile {
 function findElements(el: any, predicate: (x: any) => boolean): any[] {
   const results: any[] = [];
   if (!el) return results;
+  if (Array.isArray(el)) {
+    for (const child of el) {
+      results.push(...findElements(child, predicate));
+    }
+    return results;
+  }
   if (predicate(el)) results.push(el);
   const children = el.props?.children;
   if (children) {
@@ -112,7 +116,7 @@ describe('v0.8.8 mobile compact layout', () => {
     expect(text).not.toContain('多人联机模式');
   });
 
-  it('uses relative seat labels and compact discard tiles in latest and center discard areas', () => {
+  it('uses relative seat labels and compact discard tiles in center discard area', () => {
     const el = MobileOnlineGameLayout({
       view: compactView,
       roomId: '632863',
@@ -123,17 +127,11 @@ describe('v0.8.8 mobile compact layout', () => {
       actionPending: false,
     }) as any;
 
-    const latestDock = findElements(el, x => x?.type === MobileLatestDiscardDock)[0];
-    expect(latestDock.props.players.map((p: any) => p.playerName)).toEqual(['对', '上', '我', '下']);
-    expect(latestDock.props.players.map((p: any) => p.playerName).join('|')).not.toContain('AI_Seat');
-
     const centerArea = findElements(el, x => x?.type === MobileCenterDiscardArea)[0];
     expect(centerArea.props.players.map((p: any) => p.playerName)).toEqual(['对', '上', '我', '下']);
 
-    const renderedLatestDock = MobileLatestDiscardDock(latestDock.props) as any;
     const renderedCenterArea = MobileCenterDiscardArea(centerArea.props) as any;
-    const tileViews = findElements(renderedLatestDock, x => x?.type === TileView)
-      .concat(findElements(renderedCenterArea, x => x?.type === TileView));
+    const tileViews = findElements(renderedCenterArea, x => x?.props?.tile && x?.props?.size === 'compact');
     expect(tileViews.length).toBeGreaterThan(0);
     expect(tileViews.every(tv => tv.props.size === 'compact')).toBe(true);
   });

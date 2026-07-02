@@ -9,6 +9,11 @@ function makeTile(suit: string, rank: number, id: string): Tile {
   return { suit: suit as any, rank: rank as any, instanceId: id };
 }
 
+function getTileViewFromTileWrapper(wrapper: any): any {
+  const children = React.Children.toArray(wrapper.props.children) as any[];
+  return children.find(child => child?.props?.tile) || children[children.length - 1];
+}
+
 describe('Mobile Discard Visibility Tests', () => {
 
   describe('MobileLatestDiscardDock', () => {
@@ -76,11 +81,12 @@ describe('Mobile Discard Visibility Tests', () => {
       expect(tiles).toHaveLength(2);
 
       // Latest card (t8) should be first (index 0) due to latest-first reversing
-      expect(tiles[0].props.children.props.tile.instanceId).toBe('t8');
-      expect(tiles[0].props.className).toBe('discard-tile-latest');
+      expect(getTileViewFromTileWrapper(tiles[0]).props.tile.instanceId).toBe('t8');
+      expect(tiles[0].props.className).toContain('discard-tile-latest');
+      expect(tiles[0].props.className).toContain('tile-global-latest-discard');
 
       // Oldest visible card in the compact main view should be t7 (index 1)
-      expect(tiles[1].props.children.props.tile.instanceId).toBe('t7');
+      expect(getTileViewFromTileWrapper(tiles[1]).props.tile.instanceId).toBe('t7');
 
       // The second child (index 1) should be the +M history badge showing "+6"
       const badge = children[1];

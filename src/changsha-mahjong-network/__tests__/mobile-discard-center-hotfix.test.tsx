@@ -100,7 +100,8 @@ describe('Mobile Center Discard Area Tests', () => {
     const tiles = tilesWrapper.props.children;
     // tiles[0] is the tilesArray, tiles[0][0] is the latest tile (lastTile) because of latest-first reversing
     const tilesArray = tiles[0];
-    expect(tilesArray[0].props.className).toBe('discard-tile-latest');
+    expect(tilesArray[0].props.className).toContain('discard-tile-latest');
+    expect(tilesArray[0].props.className).toContain('tile-global-latest-discard');
   });
 
   it('7. 未出牌时显示"未出牌"提示文字', () => {
