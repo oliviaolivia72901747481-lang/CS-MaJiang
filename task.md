@@ -1,0 +1,16 @@
+- [x] 1. 服务端新增 `removeAI` 并在 waiting 阶段添加/删除 AI 时增加对 status !== 'waiting' 的强校验
+- [x] 2. 注册 `room:remove-ai` socket 接口并进行广播
+- [x] 3. 客户端 `useOnlineMahjongGame.ts` 暴露 `addAI`, `removeAI`, `fillSeatsWithAITo`
+- [x] 4. 客户端 `OnlineLobbyPage.tsx` 添加席位旁 `添加/移除机器人` 按钮，以及一键 `添加1个机器人`、`补到3人`、`补到4人` 控制按钮
+- [x] 5. 二维码生成及推荐链接逻辑防 localhost 策略改造，即使在 localhost 下也必须强制推荐真实 LAN IP 候选
+- [x] 6. 扫码 roomId 及 mode 自动 prefill 及 nickname 提交自动加入逻辑实现
+- [x] 7. 默认路由首页修改为多人联机大厅并自动识别 mode 与 roomId，添加路由同步 pushState 功能，保留且可切换至单机模式
+- [x] 8. 编写 5 个测试文件（共 23 个测试用例）：
+  - lobby-ai-control-hotfix.test.tsx
+  - room-remove-ai.test.ts
+  - scan-join-hotfix.test.tsx
+  - default-mode-online.test.tsx
+  - join-qr-code-hotfix.test.tsx
+- [x] 9. 运行定向测试及全量测试 `npm test` 并通过 (757/757 Passed)
+- [x] 10. 编译构建并成功 `npm run build` (100% Success)
+- [x] 11. 生成 manual checklist 和 hotfix 报告文件
