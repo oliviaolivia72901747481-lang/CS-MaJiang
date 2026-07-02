@@ -1,5 +1,6 @@
 import React from 'react';
 import { Meld } from '../../changsha-mahjong/types/meld.js';
+import { Tile } from '../../changsha-mahjong/types/tile.js';
 import { TileView } from './TileView.jsx';
 
 export interface MobileMeldAreaProps {
@@ -86,7 +87,7 @@ export function MobileMeldArea({ melds, compact = false }: MobileMeldAreaProps) 
             >
               {meld.tiles.map((t, tIdx) => {
                 // For anGang: hide middle 2 tiles (face-down)
-                const hidden = isAnGang && tIdx >= 1 && tIdx <= 2;
+                const hidden = (t as Tile & { hidden?: boolean }).hidden === true || (isAnGang && tIdx >= 1 && tIdx <= 2);
                 return (
                   <div
                     key={tIdx}

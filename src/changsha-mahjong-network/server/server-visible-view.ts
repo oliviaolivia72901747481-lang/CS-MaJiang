@@ -2,6 +2,24 @@ import { GameState, Tile, Meld, PendingAction, GameLogEntry } from '../../changs
 import { PlayerVisibleView, SettlementSummary } from './network-types.js';
 import { getRoom } from './room-manager.js';
 
+function maskOpponentMelds(melds: Meld[]): Meld[] {
+  return melds.map((meld, meldIndex) => {
+    if (meld.type !== 'anGang' || meld.exposed) {
+      return meld;
+    }
+
+    return {
+      ...meld,
+      tiles: meld.tiles.map((_, tileIndex) => ({
+        suit: 'wan',
+        rank: 1,
+        instanceId: `hidden-anGang-${meldIndex}-${tileIndex}`,
+        hidden: true,
+      } as Tile & { hidden: true })),
+    };
+  });
+}
+
 export function filterLogsForSeat(logs: GameLogEntry[], seat: 0 | 1 | 2 | 3): GameLogEntry[] {
   return logs.map(entry => {
     const newEntry = { ...entry };
@@ -61,7 +79,7 @@ export function buildPlayerVisibleView(input: {
       const oppView: any = {
         seat: oppSeat,
         handCount: p.hand.length,
-        melds: p.melds,
+        melds: maskOpponentMelds(p.melds),
         discards: state.discards[p.seat] || [],
         score: p.score,
         connected: connectionStatus[oppSeat] ?? false,

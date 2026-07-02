@@ -200,7 +200,7 @@ export function OnlineGamePage({
               <div className="exposed-meld-tiles">
                 {m.tiles.map((t: Tile, tIdx: number) => {
                   const isAnGang = meldType === 'anGang';
-                  const hidden = isAnGang && !isMe && tIdx >= 1 && tIdx <= 2;
+                  const hidden = (t as Tile & { hidden?: boolean }).hidden === true || (isAnGang && !isMe && tIdx >= 1 && tIdx <= 2);
                   return (
                     <TileView key={t.instanceId || tIdx} tile={t} hidden={hidden} />
                   );
