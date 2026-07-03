@@ -39,6 +39,9 @@ export interface PlayerVisibleView {
   logs: GameLogEntry[];
   settlement?: SettlementSummary;
   wallRemainingCount: number;
+  stateVersion?: number;
+  lastEventId?: string;
+  serverTime?: number;
 }
 
 export type NetworkPlayerAction = (
@@ -48,7 +51,7 @@ export type NetworkPlayerAction = (
   | { type: 'gang'; gangType: string; tileKey: string }
   | { type: 'hu' }
   | { type: 'pass' }
-) & { actionId?: string };
+) & { actionId?: string; stateVersion?: number };
 
 export type PlayerConnectionState =
   | 'online'
@@ -77,6 +80,16 @@ export interface GameSession {
   state: GameState;
   actionLock: boolean;
   lastUpdatedAt: number;
+  stateVersion?: number;
+  lastEventId?: string;
+  duplicateActionCount?: number;
+  actionAuditLog?: Array<{
+    code: string;
+    actionId?: string;
+    seat?: 0 | 1 | 2 | 3;
+    stateVersion?: number;
+    at: number;
+  }>;
 }
 
 export interface Room {

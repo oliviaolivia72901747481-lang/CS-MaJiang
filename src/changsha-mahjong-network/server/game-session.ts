@@ -6,12 +6,18 @@ import { getRoom, fillEmptySeatsWithAI } from './room-manager.js';
 import { validateNetworkAction } from './network-action-guard.js';
 import { isDuplicateAction, recordAction } from './action-dedupe.js';
 import { stepAIIfNeeded } from './ai-seat-runner.js';
+import {
+  auditGameSessionStateIfEnabled,
+  initializeGameSessionVersion,
+  markGameSessionStateChanged,
+} from './state-version-utils.js';
 
 export { stepAIIfNeeded };
 
 export interface SubmitActionResult {
   success: boolean;
   error?: string;
+  errorCode?: string;
   ignored?: boolean;
 }
 
@@ -74,7 +80,10 @@ export function startOnlineRound(
     state,
     actionLock: false,
     lastUpdatedAt: Date.now(),
+    stateVersion: 1,
+    lastEventId: 'state-1',
   };
+  initializeGameSessionVersion(session);
   (session as any).submittedActions = {};
 
   room.gameSession = session;
@@ -105,8 +114,27 @@ export function submitPlayerAction(input: {
   if (input.action.actionId) {
     const dedupeKey = { roomId: input.roomId, seat: input.seat, actionId: input.action.actionId };
     if (isDuplicateAction(dedupeKey)) {
-      return { success: true, ignored: true };
+      session.duplicateActionCount = (session.duplicateActionCount || 0) + 1;
+      session.actionAuditLog = [
+        ...(session.actionAuditLog || []),
+        {
+          code: 'DUPLICATE_ACTION',
+          actionId: input.action.actionId,
+          seat: input.seat,
+          stateVersion: input.action.stateVersion,
+          at: Date.now(),
+        },
+      ];
+      return { success: true, ignored: true, errorCode: 'DUPLICATE_ACTION' };
     }
+  }
+
+  if (input.action.stateVersion !== undefined && input.action.stateVersion !== session.stateVersion) {
+    return {
+      success: false,
+      errorCode: 'STALE_ACTION',
+      error: 'Action is stale. Please refresh the current game state.',
+    };
   }
 
   // 2. Action validation
@@ -117,7 +145,11 @@ export function submitPlayerAction(input: {
   });
 
   if (!validation.ok) {
-    return { success: false, error: validation.reason || 'Action validation failed.' };
+    return {
+      success: false,
+      errorCode: validation.errorCode || 'ACTION_NOT_AVAILABLE',
+      error: validation.reason || 'Action validation failed.',
+    };
   }
 
   session.actionLock = true;
@@ -144,7 +176,8 @@ export function submitPlayerAction(input: {
       }
 
       session.state = discardTile(state, seat, matchedTile);
-      session.lastUpdatedAt = Date.now();
+      markGameSessionStateChanged(session);
+      auditGameSessionStateIfEnabled(session);
       return { success: true };
     }
 
@@ -206,6 +239,7 @@ export function submitPlayerAction(input: {
     }
 
     session.lastUpdatedAt = Date.now();
+    auditGameSessionStateIfEnabled(session);
     return { success: true };
   } finally {
     session.actionLock = false;

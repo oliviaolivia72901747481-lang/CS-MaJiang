@@ -5,6 +5,7 @@ import { resolvePendingActions } from '../../changsha-mahjong/controller/action-
 import { checkTileConservation } from '../../changsha-mahjong/benchmark/ai-match-runner.js';
 import { Tile } from '../../changsha-mahjong/types/tile.js';
 import { addLog } from '../../changsha-mahjong/controller/game-log.js';
+import { auditGameSessionStateIfEnabled, markGameSessionStateChanged } from './state-version-utils.js';
 
 let broadcastCallback: ((roomId: string) => void) | null = null;
 
@@ -47,6 +48,7 @@ export async function stepAIIfNeeded(roomId: string): Promise<void> {
   session.actionLock = true;
   try {
     let state = session.state;
+    const originalState = session.state;
     let changed = true;
     const maxSteps = 500;
     let steps = 0;
@@ -161,7 +163,12 @@ export async function stepAIIfNeeded(roomId: string): Promise<void> {
     }
 
     session.state = state;
-    session.lastUpdatedAt = Date.now();
+    if (state !== originalState) {
+      markGameSessionStateChanged(session);
+    } else {
+      session.lastUpdatedAt = Date.now();
+    }
+    auditGameSessionStateIfEnabled(session);
   } finally {
     session.actionLock = false;
   }

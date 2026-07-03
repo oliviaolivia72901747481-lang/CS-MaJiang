@@ -49,8 +49,10 @@ export function buildPlayerVisibleView(input: {
   connectionStatus: Record<0 | 1 | 2 | 3, boolean>;
   aiSeats: Array<0 | 1 | 2 | 3>;
   playerNames?: Record<0 | 1 | 2 | 3, string>;
+  stateVersion?: number;
+  lastEventId?: string;
 }): PlayerVisibleView {
-  const { roomId, state, seat, connectionStatus, aiSeats, playerNames } = input;
+  const { roomId, state, seat, connectionStatus, aiSeats, playerNames, stateVersion, lastEventId } = input;
 
   const player = state.players.find(p => p.seat === seat);
   if (!player) {
@@ -123,5 +125,8 @@ export function buildPlayerVisibleView(input: {
     logs,
     settlement,
     wallRemainingCount: state.wall.length,
+    stateVersion,
+    lastEventId,
+    serverTime: Date.now(),
   };
 }

@@ -59,6 +59,8 @@ export function broadcastRoomState(roomId: string): void {
           connectionStatus,
           aiSeats: room.aiSeats,
           playerNames,
+          stateVersion: room.gameSession.stateVersion,
+          lastEventId: room.gameSession.lastEventId,
         });
         io.to(session.socketId).emit('game:state', view);
       } else {
@@ -163,7 +165,7 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  socket.on('game:discard', async ({ roomId, seat, tileInstanceId, actionId }: { roomId: string; seat: 0 | 1 | 2 | 3; tileInstanceId: string; actionId?: string }) => {
+  socket.on('game:discard', async ({ roomId, seat, tileInstanceId, actionId, stateVersion }: { roomId: string; seat: 0 | 1 | 2 | 3; tileInstanceId: string; actionId?: string; stateVersion?: number }) => {
     try {
       // Security authorization check
       const record = getSocketRecord(socket.id);
@@ -175,7 +177,7 @@ io.on('connection', (socket: Socket) => {
       const res = submitPlayerAction({
         roomId,
         seat,
-        action: { type: 'discard', tileInstanceId, actionId },
+        action: { type: 'discard', tileInstanceId, actionId, stateVersion },
       });
 
       if (!res.success) {

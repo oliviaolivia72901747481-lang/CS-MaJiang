@@ -51,6 +51,16 @@ export function clearOnlineSession(): void {
   localStorage.removeItem('online_token');
 }
 
+export function shouldAcceptIncomingView(
+  currentView: Pick<PlayerVisibleView, 'stateVersion'> | null,
+  incomingView: Pick<PlayerVisibleView, 'stateVersion'>
+): boolean {
+  if (currentView?.stateVersion === undefined || incomingView.stateVersion === undefined) {
+    return true;
+  }
+  return incomingView.stateVersion >= currentView.stateVersion;
+}
+
 export interface UseOnlineMahjongGameResult {
   connected: boolean;
   roomId?: string;
@@ -81,6 +91,7 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
   const [actionPending, setActionPending] = useState(false);
 
   const socketRef = useRef(getSocket(serverUrl));
+  const viewRef = useRef<PlayerVisibleView | null>(null);
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -156,7 +167,7 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
           };
         });
 
-      setView({
+      const waitingView = {
         roomId: roomData.roomId,
         seat: mySeat,
         phase: 'waiting',
@@ -167,11 +178,17 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
         pendingActions: [],
         logs: [],
         wallRemainingCount: 108,
-      } as any);
+      } as any;
+      viewRef.current = waitingView;
+      setView(waitingView);
     };
 
     const handleGameState = (gView: PlayerVisibleView) => {
+      if (!shouldAcceptIncomingView(viewRef.current, gView)) {
+        return;
+      }
       setActionPending(false);
+      viewRef.current = gView;
       setView(gView);
     };
 
@@ -181,6 +198,7 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
       clearOnlineSession();
       setRoomId(undefined);
       setSeat(undefined);
+      viewRef.current = null;
       setView(null);
       setTimeout(() => setError(undefined), 5000);
     };
@@ -197,6 +215,7 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
         clearOnlineSession();
         setRoomId(undefined);
         setSeat(undefined);
+        viewRef.current = null;
         setView(null);
       }
       setTimeout(() => setError(undefined), 5000);
@@ -273,14 +292,14 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
     if (!roomId || seat === undefined || actionPending) return;
     setActionPending(true);
     const actionId = `act-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
-    socketRef.current.emit('game:discard', { roomId, seat, tileInstanceId, actionId });
+    socketRef.current.emit('game:discard', { roomId, seat, tileInstanceId, actionId, stateVersion: view?.stateVersion });
   };
 
   const performAction = (action: NetworkPlayerAction) => {
     if (!roomId || seat === undefined || actionPending) return;
     setActionPending(true);
     const actionId = `act-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
-    const actionWithId = { ...action, actionId };
+    const actionWithId = { ...action, actionId, stateVersion: view?.stateVersion };
     socketRef.current.emit('game:action', { roomId, seat, action: actionWithId });
   };
 
@@ -310,6 +329,7 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
         clearOnlineSession();
         setRoomId(undefined);
         setSeat(undefined);
+        viewRef.current = null;
         setView(null);
         resolve();
         return;
@@ -320,6 +340,7 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
           clearOnlineSession();
           setRoomId(undefined);
           setSeat(undefined);
+          viewRef.current = null;
           setView(null);
           resolve();
         } else {
@@ -336,6 +357,7 @@ export function useOnlineMahjongGame(serverUrl?: string): UseOnlineMahjongGameRe
         clearOnlineSession();
         setRoomId(undefined);
         setSeat(undefined);
+        viewRef.current = null;
         setView(null);
         setActionPending(false);
         resolve();
